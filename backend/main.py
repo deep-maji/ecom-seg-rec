@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from routers.webhooks import router as webhook_router
 
 app = FastAPI(title="Customer Segmentation Inference API")
 
@@ -24,6 +25,19 @@ class SegmentPredictionResponse(BaseModel):
     frequency: int
     monetary: float
 
+app.include_router(
+    webhook_router,
+    prefix="/api/webhooks",
+    tags=["Webhooks"]
+)
+
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Customer Segmentation Inference API!"}
+
+
+
+# Test customer segmentation prediction endpoint
 @app.post("/api/predict-segment", response_model=SegmentPredictionResponse)
 def predict_customer_segment(payload: CustomerRFMInput):
     # 1. Apply the exact same feature transformations used in training
