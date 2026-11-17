@@ -1,6 +1,5 @@
-import React from "react";
 import { Link } from "react-router-dom";
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/react";
+import { Show, UserButton } from "@clerk/react";
 
 export default function Navbar({
   searchTerm,
@@ -54,8 +53,18 @@ export default function Navbar({
           {/* রাইট সাইড মেন্যু */}
           <div className="d-flex align-items-center gap-4 mt-3 mt-lg-0">
             <Show when="signed-out">
-              <SignInButton />
-              <SignUpButton />
+              <Link
+                to="/signin"
+                className="btn btn-light btn-sm fw-semibold"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="btn btn-outline-light btn-sm fw-semibold"
+              >
+                Sign up
+              </Link>
             </Show>
             <Show when="signed-in">
               <UserButton />

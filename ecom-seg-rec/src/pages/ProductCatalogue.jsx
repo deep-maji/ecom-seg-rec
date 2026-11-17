@@ -1,4 +1,5 @@
-import React from 'react';
+import { useAuth } from '@clerk/react';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -65,9 +66,16 @@ const dummyProducts = [
 ];
 
 export default function ProductCatalogue({ searchTerm, selectedCategory, setSelectedCategory, cart, setCart }) {
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
   
   // প্রোডাক্ট কার্টে অ্যাড করার ফাংশন
   const addToCart = (product) => {
+    if (isSignedIn !== true) {
+      navigate('/signin');
+      return;
+    }
+
     const existingItem = cart.find(item => item.id === product.id);
     if (existingItem) {
       setCart(cart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
