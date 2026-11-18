@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from routers import placeOrder
 from db import supabase
 from routers.webhooks import router as webhook_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +49,8 @@ app.include_router(
     prefix="/api/webhooks",
     tags=["Webhooks"]
 )
+
+app.include_router(placeOrder.router)
 
 @app.get("/")
 def root():

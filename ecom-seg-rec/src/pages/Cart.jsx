@@ -1,19 +1,65 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth, useUser } from '@clerk/react';
+import { useState } from 'react';
+import { useCart } from '../contexts/CartContext.jsx';
 
-export default function Cart({ cart, setCart }) {
+export default function Cart() {
+  const { isSignedIn, userId } = useAuth();
+  const { user } = useUser();
+  const { cart, removeFromCart, clearCart } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   // কার্টের মোট দাম হিসাব করা
   const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   // প্রোডাক্ট রিমুভ ফাংশন
-  const removeFromCart = (id) => {
-    setCart(cart.filter(item => item.id !== id));
+  const handleRemoveFromCart = (id) => {
+    removeFromCart(id);
   };
 
   // সিমুলেটেড চেকআউট ফাংশন
-  const handleCheckout = () => {
-    alert("Simulated Checkout Successful! 🎉\n\nThis is an academic prototype. No real payment was processed.");
-    setCart([]); // চেকআউটের পর কার্ট খালি করে দেওয়া হলো
+  const handleCheckout = async () => {
+    const email = user?.primaryEmailAddress?.emailAddress;
+
+    if (!isSignedIn || !userId || !email) {
+      alert('Please sign in with an email address before checking out.');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clerk_user_id: userId,
+          email,
+          full_name: user.fullName || null,
+          items: cart.map((item) => ({
+            product_id: String(item.product_id),
+            quantity: item.quantity,
+            unit_price: Number(item.price),
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Checkout request failed (${response.status}): ${errorBody}`);
+      }
+
+      const checkout = await response.json();
+      clearCart();
+      alert(
+        `Simulated Checkout Successful! 🎉\n\nOrder ID: ${checkout.order_id}\nTotal: ₹${Number(checkout.total_amount).toLocaleString('en-IN')}`,
+      );
+    } catch (error) {
+      console.error('Unable to complete checkout:', error);
+      alert('Checkout failed. Please try again.');
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -37,13 +83,13 @@ export default function Cart({ cart, setCart }) {
                 <div className="card-body p-0">
                   {cart.map((item, index) => (
                     <div key={index} className="d-flex align-items-center p-3 border-bottom">
-                      <img src={item.img} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'contain' }} className="me-4" />
+                      <img src={item.image_url} alt={item.display_name} style={{ width: '80px', height: '80px', objectFit: 'contain' }} className="me-4" />
                       <div className="flex-grow-1">
-                        <h6 className="fw-bold text-dark mb-1">{item.name}</h6>
-                        <p className="text-muted small mb-2">Category: {item.category}</p>
+                        <h6 className="fw-bold text-dark mb-1">{item.display_name}</h6>
+                        <p className="text-muted small mb-2">Category: {item.category_en}</p>
                         <h5 className="fw-bold mb-0">₹{item.price.toLocaleString('en-IN')} <span className="text-muted fs-6">x {item.quantity}</span></h5>
                       </div>
-                      <button className="btn btn-outline-danger fw-bold rounded-1" onClick={() => removeFromCart(item.id)}>
+                      <button className="btn btn-outline-danger fw-bold rounded-1" onClick={() => handleRemoveFromCart(item.product_id)}>
                         Remove
                       </button>
                     </div>
@@ -77,9 +123,9 @@ export default function Cart({ cart, setCart }) {
                 className="btn btn-warning w-100 fw-bold py-2 mb-2" 
                 style={{ backgroundColor: '#fb641b', color: 'white', border: 'none', borderRadius: '2px' }}
                 onClick={handleCheckout}
-                disabled={cart.length === 0}
+                disabled={cart.length === 0 || isCheckingOut}
               >
-                PLACE ORDER (SIMULATED)
+                {isCheckingOut ? 'PROCESSING...' : 'PLACE ORDER (SIMULATED)'}
               </button>
               <small className="text-muted text-center d-block" style={{ fontSize: '11px' }}>
                 *This is a simulation. No real payments are processed.

@@ -14,6 +14,7 @@ import Navbar from "./components/Navbar";
 import Cart from "./pages/Cart"; // নতুন কার্ট ইম্পোর্ট
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
+import { useCart } from "./contexts/CartContext.jsx";
 
 function AppContent() {
   const location = useLocation();
@@ -21,11 +22,9 @@ function AppContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // কার্টের জন্য নতুন গ্লোবাল স্টেট
-  const [cart, setCart] = useState([]);
+  const { cart } = useCart();
 
-  const hideNavbar =
-    location.pathname === "/signin" || location.pathname === "/signup";
+  const hideNavbar = location.pathname === "/signin" || location.pathname === "/signup";
 
   return (
     <>
@@ -34,7 +33,7 @@ function AppContent() {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           setSelectedCategory={setSelectedCategory}
-          cart={cart} // ন্যাভবারে কার্ট ডেটা পাঠানো হচ্ছে
+          cart={cart}
         />
       )}
 
@@ -50,14 +49,12 @@ function AppContent() {
               searchTerm={searchTerm}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
-              cart={cart}
-              setCart={setCart} // ক্যাটালগে কার্ট ডেটা পাঠানো হচ্ছে
             />
           }
         />
 
         {/* কার্ট পেজের রাউট */}
-        <Route path="/cart" element={<Cart cart={cart} setCart={setCart} />} />
+        <Route path="/cart" element={<Cart />} />
       </Routes>
     </>
   );
