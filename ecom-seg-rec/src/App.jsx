@@ -14,6 +14,7 @@ import Navbar from "./components/Navbar";
 import Cart from "./pages/Cart"; // নতুন কার্ট ইম্পোর্ট
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
+import OrderHistory from "./pages/OrderHistory";
 import { useCart } from "./contexts/CartContext.jsx";
 
 function AppContent() {
@@ -55,6 +56,8 @@ function AppContent() {
 
         {/* কার্ট পেজের রাউট */}
         <Route path="/cart" element={<Cart />} />
+        {/* ✅ অর্ডার হিস্ট্রি পেজের রাউট */}
+        <Route path="/orders" element={<OrderHistory />} />
       </Routes>
     </>
   );
