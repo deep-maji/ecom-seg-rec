@@ -49,40 +49,37 @@ export default function Navbar({
               style={{ borderRadius: "4px" }}
             />
           </form>
+        </div>
 
-          {/* রাইট সাইড মেন্যু */}
-          <div className="d-flex align-items-center gap-4 mt-3 mt-lg-0">
-            <Show when="signed-out">
-              <Link
-                to="/signin"
-                className="btn btn-light btn-sm fw-semibold"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/signup"
-                className="btn btn-outline-light btn-sm fw-semibold"
-              >
-                Sign up
-              </Link>
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
-
-            {/* কার্ট বাটন ও আইটেম কাউন্টার */}
-            <Link
-              to="/cart"
-              className="text-white text-decoration-none fw-semibold d-flex align-items-center"
-            >
-              🛒 Cart
-              {cart.length > 0 && (
-                <span className="badge bg-warning text-dark ms-2 rounded-circle px-2 py-1 shadow-sm">
-                  {cart.length}
-                </span>
-              )}
+        {/* রাইট সাইড মেন্যু */}
+        <div className="d-flex align-items-center gap-4 mt-3 mt-lg-0">
+          <Show when="signed-out">
+            <Link to="/signin" className="btn btn-light btn-sm fw-semibold">
+              Sign in
             </Link>
-          </div>
+            <Link
+              to="/signup"
+              className="btn btn-outline-light btn-sm fw-semibold"
+            >
+              Sign up
+            </Link>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+
+          {/* কার্ট বাটন ও আইটেম কাউন্টার */}
+          <Link
+            to="/cart"
+            className="text-white text-decoration-none fw-semibold d-flex align-items-center"
+          >
+            🛒 Cart
+            {cart.length > 0 && (
+              <span className="badge bg-warning text-dark ms-2 rounded-circle px-2 py-1 shadow-sm">
+                {cart.length}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
     </nav>

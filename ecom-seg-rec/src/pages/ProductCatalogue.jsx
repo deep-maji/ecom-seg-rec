@@ -1,12 +1,13 @@
 import { useAuth } from '@clerk/react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 // ডামি প্রোডাক্ট ডেটা
 // 50+ Realistic Dummy Products for Ecommerce Prototype
 const dummyProducts = [
-  // 💻 Electronics (15 Items)
+  // Electronics (15 Items)
   { id: 1, name: 'Sony Noise Cancelling Headphones', category: 'Electronics', price: 12500, rating: 4.8, img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80' },
   { id: 2, name: 'Apple Watch Series 8', category: 'Electronics', price: 42000, rating: 4.9, img: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500&q=80' },
   { id: 3, name: 'MacBook Pro M2 14-inch', category: 'Electronics', price: 195000, rating: 4.9, img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80' },
@@ -23,7 +24,7 @@ const dummyProducts = [
   { id: 14, name: 'Amazon Echo Dot (5th Gen)', category: 'Electronics', price: 4499, rating: 4.4, img: 'https://images.unsplash.com/photo-1543512214-318c7553f230?w=500&q=80' },
   { id: 15, name: 'DJI Mini 3 Pro Drone', category: 'Electronics', price: 82000, rating: 4.9, img: 'https://images.unsplash.com/photo-1579829366248-204fe8413f31?w=500&q=80' },
 
-  // 👕 Fashion (15 Items)
+  // Fashion (15 Items)
   { id: 16, name: 'Men\'s Casual Sneakers', category: 'Fashion', price: 2200, rating: 4.5, img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80' },
   { id: 17, name: 'Premium Leather Jacket', category: 'Fashion', price: 5500, rating: 4.7, img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80' },
   { id: 18, name: 'Men\'s Classic White T-Shirt', category: 'Fashion', price: 699, rating: 4.3, img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&q=80' },
@@ -40,7 +41,7 @@ const dummyProducts = [
   { id: 29, name: 'Winter Puffer Jacket', category: 'Fashion', price: 4500, rating: 4.6, img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80' },
   { id: 30, name: 'Classic Denim Jacket', category: 'Fashion', price: 2899, rating: 4.5, img: 'https://images.unsplash.com/photo-1576871337644-24a408f5bf94?w=500&q=80' },
 
-  // 🛋️ Home & Kitchen (10 Items)
+  // Home & Kitchen (10 Items)
   { id: 31, name: 'Smart Espresso Maker', category: 'Home', price: 8500, rating: 4.6, img: 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=500&q=80' },
   { id: 32, name: 'Minimalist Desk Lamp', category: 'Home', price: 1200, rating: 4.4, img: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&q=80' },
   { id: 33, name: 'Ergonomic Office Chair', category: 'Home', price: 6500, rating: 4.5, img: 'https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?w=500&q=80' },
@@ -52,7 +53,7 @@ const dummyProducts = [
   { id: 39, name: 'Velvet Throw Pillows (Set of 2)', category: 'Home', price: 999, rating: 4.4, img: 'https://images.unsplash.com/photo-1583847268964-b28ce8f3009c?w=500&q=80' },
   { id: 40, name: 'Smart WiFi LED Bulb', category: 'Home', price: 699, rating: 4.5, img: 'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=500&q=80' },
 
-  // 🎒 Accessories (10 Items)
+  // Accessories (10 Items)
   { id: 41, name: 'Polarized Aviator Sunglasses', category: 'Accessories', price: 1800, rating: 4.3, img: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80' },
   { id: 42, name: 'Waterproof Travel Backpack', category: 'Accessories', price: 2100, rating: 4.8, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80' },
   { id: 43, name: 'Fossil Chronograph Watch', category: 'Accessories', price: 9500, rating: 4.7, img: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=500&q=80' },
@@ -66,8 +67,43 @@ const dummyProducts = [
 ];
 
 export default function ProductCatalogue({ searchTerm, selectedCategory, setSelectedCategory, cart, setCart }) {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
   const navigate = useNavigate();
+
+  console.log('User Signed In:', isSignedIn, 'User ID:', userId);
+  const [recsProducts, setRecsProducts] = useState([]);
+  const [segment, setSegment] = useState('');
+
+  useEffect(() => {
+    const clerkUserId = isSignedIn && userId ? userId : 'guest';
+    const url = `http://127.0.0.1:8000/api/recommendations/${encodeURIComponent(clerkUserId)}?limit=24`;
+
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Recommendations request failed: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        const products = (data.recommendations || []).map((product) => ({
+          ...product,
+          id: product.product_id,
+          name: product.display_name,
+          img: product.image_url,
+          category: product.category_en,
+          rating: product.avg_rating,
+          price: Number(product.price),
+        }));
+        setRecsProducts(products);
+        setSegment(data.segment_name);
+      })
+      .catch((error) => {
+        console.error('Unable to load recommendations:', error);
+      });
+  }, [isSignedIn, userId]);
+
+  console.log('Recommendations:', recsProducts, 'Segment:', segment);
   
   // প্রোডাক্ট কার্টে অ্যাড করার ফাংশন
   const addToCart = (product) => {
@@ -86,8 +122,10 @@ export default function ProductCatalogue({ searchTerm, selectedCategory, setSele
   };
 
   // সার্চ এবং ক্যাটাগরির ওপর ভিত্তি করে প্রোডাক্ট ফিল্টার
-  const filteredProducts = dummyProducts.filter(product => {
-    const matchCategory = selectedCategory === 'All' || product.category === selectedCategory;
+  const filteredProducts = recsProducts.filter(product => {
+    const matchCategory =
+      selectedCategory === 'All' ||
+      product.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchCategory && matchSearch;
   });
