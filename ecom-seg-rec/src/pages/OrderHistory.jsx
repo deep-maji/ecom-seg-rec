@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
+import { useAuth } from "@clerk/react";
 import {
   Search,
   CheckCircle2,
@@ -10,114 +11,54 @@ import {
   Star,
   Clock,
 } from "lucide-react";
-
-// ✅ ডামি ডেটা (তোমার বন্ধুর PostgreSQL Schema অনুযায়ী)
-const DUMMY_ORDERS = [
-  {
-    order_id: "550e8400-e29b-41d4-a716-446655440000",
-    clerk_user_id: "user_2abc123xyz",
-    total_amount: 3499.0,
-    order_status: "simulated_delivered",
-    created_at: "2026-11-15T10:30:00Z",
-    items: [
-      {
-        item_id: 1,
-        product_id: "prod_elec_01",
-        quantity: 1,
-        unit_price: 2499.0,
-        product: {
-          display_name: "Wireless Noise Cancelling Over-Ear Headphones",
-          image_url:
-            "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300",
-          category_en: "electronics",
-        },
-      },
-      {
-        item_id: 2,
-        product_id: "prod_acc_02",
-        quantity: 2,
-        unit_price: 500.0,
-        product: {
-          display_name: "Braided USB-C 65W Fast Charging Cable (2m)",
-          image_url:
-            "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=300",
-          category_en: "electronics",
-        },
-      },
-    ],
-  },
-  {
-    order_id: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
-    clerk_user_id: "user_2abc123xyz",
-    total_amount: 1850.0,
-    order_status: "processing",
-    created_at: "2026-11-18T14:20:00Z",
-    items: [
-      {
-        item_id: 3,
-        product_id: "prod_watch_09",
-        quantity: 1,
-        unit_price: 1850.0,
-        product: {
-          display_name: "Minimalist Analog Brown Leather Strap Watch",
-          image_url:
-            "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300",
-          category_en: "watches_gifts",
-        },
-      },
-    ],
-  },
-  {
-    order_id: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    clerk_user_id: "user_2abc123xyz",
-    total_amount: 1299.0,
-    order_status: "cancelled",
-    created_at: "2026-11-10T09:15:00Z",
-    items: [
-      {
-        item_id: 4,
-        product_id: "prod_shoe_12",
-        quantity: 1,
-        unit_price: 1299.0,
-        product: {
-          display_name: "Lightweight Mesh Running Sneakers - Black",
-          image_url:
-            "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300",
-          category_en: "fashion_shoes",
-        },
-      },
-    ],
-  },
-];
+import { useCart } from "../contexts/CartContext.jsx";
+import BootstrapAlert from "../components/BootstrapAlert.jsx";
 
 const OrderHistory = () => {
+  const { isSignedIn, isLoaded, userId } = useAuth();
+  const { addToCart } = useCart();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState(null);
+  const closeNotice = useCallback(() => setNotice(null), []);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // 🔌 ব্যাকএন্ড API রেডি হলে এখানে fetch / axios বসাবে:
-    /*
+    if (!isLoaded) return;
+    if (!isSignedIn || !userId) return;
+
     const fetchOrders = async () => {
       try {
-        const res = await fetch(`/api/orders/${clerkUserId}`);
+        setLoading(true);
+        setError("");
+        const apiBase = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+        const res = await fetch(
+          `${apiBase}/api/orders/${encodeURIComponent(userId)}`
+        );
+        if (!res.ok) {
+          throw new Error(`Order request failed (${res.status})`);
+        }
         const data = await res.json();
-        setOrders(data);
+        setOrders(
+          (data.orders || []).map((order) => ({
+            ...order,
+            items: (order.app_order_items || order.items || []).map((item) => ({
+              ...item,
+              product: item.products || item.product,
+            })),
+          }))
+        );
       } catch (err) {
         console.error("Failed to load orders:", err);
+        setError("We couldn't load your orders. Please try again.");
       } finally {
         setLoading(false);
       }
     };
     fetchOrders();
-    */
-
-    setTimeout(() => {
-      setOrders(DUMMY_ORDERS);
-      setLoading(false);
-    }, 300);
-  }, []);
+  }, [isLoaded, isSignedIn, userId]);
 
   const getNormalizedStatus = (status) => {
     const s = status?.toLowerCase() || "";
@@ -171,7 +112,7 @@ const OrderHistory = () => {
     );
   };
 
-  if (loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="bg-light min-vh-100 d-flex flex-column justify-content-center align-items-center">
         <div className="spinner-border text-primary mb-3" role="status"></div>
@@ -180,8 +121,20 @@ const OrderHistory = () => {
     );
   }
 
+  if (!isSignedIn) {
+    return (
+      <div className="bg-light min-vh-100 d-flex justify-content-center align-items-center">
+        <div className="card border-0 shadow-sm rounded-4 text-center p-5">
+          <ShoppingBag size={48} className="text-secondary opacity-50 mb-3" />
+          <h5 className="fw-bold">Sign in to view your orders</h5>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-light min-vh-100 py-5">
+      <BootstrapAlert alert={notice} onClose={closeNotice} />
       <div className="container" style={{ maxWidth: "1000px" }}>
         {/* Header & Search Row */}
         <div className="row align-items-center justify-content-between mb-4 g-3">
@@ -207,6 +160,12 @@ const OrderHistory = () => {
             </div>
           </div>
         </div>
+
+        {error && (
+          <div className="alert alert-danger rounded-3" role="alert">
+            {error}
+          </div>
+        )}
 
         {/* Filter Pills */}
         <ul className="nav nav-pills mb-4 gap-2">
@@ -311,11 +270,12 @@ const OrderHistory = () => {
 
                       <button
                         onClick={() =>
-                          alert(
-                            `Downloading invoice for #${order.order_id
+                          setNotice({
+                            type: "info",
+                            message: `Invoice for #${order.order_id
                               .slice(0, 8)
-                              .toUpperCase()}`
-                          )
+                              .toUpperCase()} is not available yet.`,
+                          })
                         }
                         className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 rounded-3 fw-semibold"
                       >
@@ -389,7 +349,10 @@ const OrderHistory = () => {
                             {statusType === "processing" ? (
                               <button
                                 onClick={() =>
-                                  alert("Tracking details coming soon!")
+                                  setNotice({
+                                    type: "info",
+                                    message: "Tracking details coming soon!",
+                                  })
                                 }
                                 className="btn btn-primary btn-sm rounded-3 fw-semibold d-inline-flex align-items-center justify-content-center gap-1 w-100"
                                 style={{ maxWidth: "160px" }}
@@ -398,11 +361,16 @@ const OrderHistory = () => {
                               </button>
                             ) : (
                               <button
-                                onClick={() =>
-                                  alert(
-                                    `Added "${item.product?.display_name}" to cart!`
-                                  )
-                                }
+                                onClick={() => {
+                                  if (!item.product) return;
+                                  addToCart({
+                                    product_id: item.product_id,
+                                    display_name: item.product.display_name,
+                                    image_url: item.product.image_url,
+                                    category_en: item.product.category_en,
+                                    price: Number(item.unit_price),
+                                  }, item.quantity);
+                                }}
                                 className="btn btn-dark btn-sm rounded-3 fw-semibold d-inline-flex align-items-center justify-content-center gap-1 w-100"
                                 style={{ maxWidth: "160px" }}
                               >
@@ -413,7 +381,10 @@ const OrderHistory = () => {
                             {statusType === "delivered" && (
                               <button
                                 onClick={() =>
-                                  alert("Review modal coming soon!")
+                              setNotice({
+                                type: "info",
+                                message: "Review modal coming soon!",
+                              })
                                 }
                                 className="btn btn-outline-secondary btn-sm rounded-3 fw-semibold d-inline-flex align-items-center justify-content-center gap-1 w-100"
                                 style={{ maxWidth: "160px" }}

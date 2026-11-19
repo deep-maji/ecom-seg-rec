@@ -15,6 +15,7 @@ import Cart from "./pages/Cart"; // নতুন কার্ট ইম্পো
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import OrderHistory from "./pages/OrderHistory";
+import AllProducts from "./pages/AllProducts";
 import { useCart } from "./contexts/CartContext.jsx";
 
 function AppContent() {
@@ -25,7 +26,8 @@ function AppContent() {
 
   const { cart } = useCart();
 
-  const hideNavbar = location.pathname === "/signin" || location.pathname === "/signup";
+  const hideNavbar =
+    location.pathname === "/signin" || location.pathname === "/signup";
 
   return (
     <>
@@ -39,12 +41,8 @@ function AppContent() {
       )}
 
       <Routes>
-        <Route path="/" element={<Navigate to="/signin" replace />} />
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-
         <Route
-          path="/catalogue"
+          path="/"
           element={
             <ProductCatalogue
               searchTerm={searchTerm}
@@ -53,11 +51,14 @@ function AppContent() {
             />
           }
         />
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
 
         {/* কার্ট পেজের রাউট */}
         <Route path="/cart" element={<Cart />} />
         {/* ✅ অর্ডার হিস্ট্রি পেজের রাউট */}
         <Route path="/orders" element={<OrderHistory />} />
+        <Route path="/allproducts" element={<AllProducts />} />
       </Routes>
     </>
   );

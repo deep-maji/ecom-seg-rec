@@ -9,6 +9,9 @@ from routers import placeOrder
 from db import supabase
 from routers.webhooks import router as webhook_router
 from fastapi.middleware.cors import CORSMiddleware
+from routers import orders
+from routers import allproducts as products
+from routers import user
 
 app = FastAPI(title="Customer Segmentation Inference API")
 
@@ -51,6 +54,9 @@ app.include_router(
 )
 
 app.include_router(placeOrder.router)
+app.include_router(orders.router)
+app.include_router(products.router)
+app.include_router(user.router)
 
 @app.get("/")
 def root():
@@ -83,7 +89,7 @@ def predict_customer_segment(payload: CustomerRFMInput):
 
 
 # Product recommendation endpoint test
-PRODUCT_FIELDS = "product_id, display_name, description, image_url, category_en, price, avg_rating, popularity_score"
+PRODUCT_FIELDS = "product_id, display_name, description, image_url, category_en, price, avg_rating, popularity_score, purchase_count"
 
 
 @app.get("/api/recommendations/{clerk_user_id}")
