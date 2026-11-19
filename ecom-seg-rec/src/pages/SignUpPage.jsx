@@ -6,7 +6,7 @@ export default function SignUpPage() {
       <SignUp
         routing="virtual"
         signInUrl="/signin"
-        fallbackRedirectUrl="/catalogue"
+        fallbackRedirectUrl="/"
         appearance={{
           elements: {
             card: 'shadow-sm border-0',
