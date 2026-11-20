@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCart } from "../contexts/CartContext.jsx";
 import BootstrapAlert from "../components/BootstrapAlert.jsx";
+import { formatBrl, formatInr } from "./priceUtils.js";
 
 const OrderHistory = () => {
   const { isSignedIn, isLoaded, userId } = useAuth();
@@ -244,11 +245,10 @@ const OrderHistory = () => {
                             Total Amount
                           </div>
                           <div className="fw-bold text-dark small">
-                            ₹
-                            {Number(order.total_amount).toLocaleString(
-                              "en-IN",
-                              { minimumFractionDigits: 2 }
-                            )}
+                            {formatBrl(order.total_amount)}{" "}
+                            <span className="text-muted">
+                              ({formatInr(order.total_amount)})
+                            </span>
                           </div>
                         </div>
 
@@ -333,12 +333,14 @@ const OrderHistory = () => {
                                 </span>
                                 <span className="text-muted">•</span>
                                 <span className="fw-bold text-dark">
-                                  ₹
-                                  {(
+                                  {formatBrl(
                                     item.quantity * Number(item.unit_price)
-                                  ).toLocaleString("en-IN", {
-                                    minimumFractionDigits: 2,
-                                  })}
+                                  )}{" "}
+                                  <span className="text-muted">
+                                    ({formatInr(
+                                      item.quantity * Number(item.unit_price)
+                                    )})
+                                  </span>
                                 </span>
                               </div>
                             </div>

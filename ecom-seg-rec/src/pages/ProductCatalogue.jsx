@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { useCart } from "../contexts/CartContext.jsx";
 import BootstrapAlert from "../components/BootstrapAlert.jsx";
+import { formatBrl, formatInr } from "./priceUtils.js";
 
 export default function ProductCatalogue({
   searchTerm,
@@ -237,7 +238,7 @@ export default function ProductCatalogue({
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 className="fw-bold m-0">
             {selectedCategory === "All"
-              ? "Best Sellers"
+              ? "Recommended products for you"
               : `${selectedCategory} Collection`}
           </h4>
           {selectedCategory !== "All" && (
@@ -293,7 +294,10 @@ export default function ProductCatalogue({
                       </span>
                     </div>
                     <h5 className="fw-bold mb-3" style={{ color: "#212121" }}>
-                      ₹{product.price.toLocaleString("en-IN")}
+                      {formatBrl(product.price)}{" "}
+                      <span className="text-muted fs-6">
+                        ({formatInr(product.price)})
+                      </span>
                     </h5>
 
                     {/* Add to Cart Button */}

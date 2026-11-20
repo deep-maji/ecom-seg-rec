@@ -3,6 +3,7 @@ import { useAuth } from "@clerk/react";
 import { useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Star } from "lucide-react";
 import { useCart } from "../contexts/CartContext.jsx";
+import { formatBrl, formatInr } from "./priceUtils.js";
 
 export default function AllProducts() {
   const { isSignedIn } = useAuth();
@@ -166,9 +167,10 @@ export default function AllProducts() {
 
                     <div className="d-flex align-items-center justify-content-between mt-auto mb-3">
                       <strong className="text-dark fs-5">
-                        ₹{Number(product.price).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
+                        {formatBrl(product.price)}{" "}
+                        <span className="text-muted fs-6">
+                          ({formatInr(product.price)})
+                        </span>
                       </strong>
                       <span className="badge bg-success-subtle text-success border border-success-subtle">
                         <Star size={13} fill="currentColor" className="me-1" />

@@ -3,6 +3,7 @@ import { useAuth, useUser } from "@clerk/react";
 import { useCallback, useState } from "react";
 import { useCart } from "../contexts/CartContext.jsx";
 import BootstrapAlert from "../components/BootstrapAlert.jsx";
+import { formatBrl, formatInr } from "./priceUtils.js";
 
 export default function Cart() {
   const { isSignedIn, userId } = useAuth();
@@ -65,7 +66,7 @@ export default function Cart() {
       clearCart();
       setNotice({
         type: "success",
-        message: `Checkout successful! Order ID: ${checkout.order_id} | Total: ₹${Number(checkout.total_amount).toLocaleString("en-IN")}`,
+        message: `Checkout successful! Order ID: ${checkout.order_id} | Total: ${formatBrl(checkout.total_amount)} (${formatInr(checkout.total_amount)})`,
       });
     } catch (error) {
       console.error("Unable to complete checkout:", error);
@@ -97,7 +98,7 @@ export default function Cart() {
                   Explore our wide range of products and add them to your cart.
                 </p>
                 <Link
-                  to="/catalogue"
+                  to="/"
                   className="btn btn-primary fw-bold mt-2 mx-auto"
                   style={{ width: "200px" }}
                 >
@@ -130,7 +131,10 @@ export default function Cart() {
                           Category: {item.category_en}
                         </p>
                         <h5 className="fw-bold mb-0">
-                          ₹{item.price.toLocaleString("en-IN")}{" "}
+                          {formatBrl(item.price)}{" "}
+                          <span className="text-muted fs-6">
+                            ({formatInr(item.price)})
+                          </span>{" "}
                           <span className="text-muted fs-6">
                             x {item.quantity}
                           </span>
@@ -161,7 +165,9 @@ export default function Cart() {
 
               <div className="d-flex justify-content-between mb-3">
                 <span>Price ({cart.length} items)</span>
-                <span>₹{totalPrice.toLocaleString("en-IN")}</span>
+                <span>
+                  {formatBrl(totalPrice)} ({formatInr(totalPrice)})
+                </span>
               </div>
               <div className="d-flex justify-content-between mb-3 text-success">
                 <span>Delivery Charges</span>
@@ -170,7 +176,9 @@ export default function Cart() {
 
               <div className="d-flex justify-content-between mb-4 pb-3 border-bottom fw-bold fs-5">
                 <span>Total Amount</span>
-                <span>₹{totalPrice.toLocaleString("en-IN")}</span>
+                <span>
+                  {formatBrl(totalPrice)} ({formatInr(totalPrice)})
+                </span>
               </div>
 
               {/* সিমুলেটেড চেকআউট বাটন */}
